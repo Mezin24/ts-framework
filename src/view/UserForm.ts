@@ -1,19 +1,12 @@
-import { User } from '../model/User';
+import { User, UserProps } from '../model/User';
+import { View } from './View';
 
-export class UserForm {
-  constructor(public parent: Element, public model: User) {
-    this.bindModel();
-  }
-
-  bindModel(): void {
-    this.model.on('change', () => {
-      this.render();
-    });
-  }
-
+export class UserForm extends View<User, UserProps> {
   eventsMap(): { [key: string]: () => void } {
     return {
       'click:.set-age': this.onSetRandomAge,
+      'click:.set-name': this.onSetNameClick,
+      'click:.save-model': this.onSaveModel,
     };
   }
 
@@ -21,32 +14,26 @@ export class UserForm {
     this.model.setRandomAge();
   };
 
+  onSaveModel = (): void => {
+    this.model.save();
+  };
+
+  onSetNameClick = (): void => {
+    const input = this.parent.querySelector(
+      'input.change-name'
+    )! as HTMLInputElement;
+    const name = input.value;
+    this.model.set({ name });
+  };
+
   template(): string {
     return `<div>
-        <h1>User Form</h1>
-        <div>User name: ${this.model.get('name')}</div>
-        <div>User age: ${this.model.get('age')}</div>
-        <input type="text" />
-        <button>Click Me</button>
+        <input type="text" class="change-name" placeholder="${this.model.get(
+          'name'
+        )}"/>
+        <button class="set-name">Change name</button>
         <button class="set-age">Set random age</button>
+        <button class="save-model">Save User</button>
       </div>`;
-  }
-
-  bindEvents(fragment: DocumentFragment): void {
-    const eventsMap = this.eventsMap();
-    Object.keys(this.eventsMap()).forEach((event) => {
-      const [eventName, elemtnName] = event.split(':');
-      fragment.querySelectorAll(elemtnName).forEach((element) => {
-        element.addEventListener(eventName, eventsMap[event]);
-      });
-    });
-  }
-
-  render(): void {
-    this.parent.innerHTML = '';
-    const templateElement = document.createElement('template');
-    templateElement.innerHTML = this.template();
-    this.bindEvents(templateElement.content);
-    this.parent.append(templateElement.content);
   }
 }
